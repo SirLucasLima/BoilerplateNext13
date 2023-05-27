@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { hash } from 'bcryptjs'
+import { AppError } from '../utils/AppError'
 
 export async function usersRoute(app: FastifyInstance) {
   app.post('/users', async (request, reply) => {
@@ -13,23 +14,26 @@ export async function usersRoute(app: FastifyInstance) {
         .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/),
     })
 
-    try {
-      const { username, password } = registerBodySchema.parse(request.body)
+    const { username, password } = registerBodySchema.parse(request.body)
 
-      const hashedPassword = await hash(password, 12) // Aumentar o fator de trabalho para 12
+    const userExists = await prisma.user.findUnique({
+      where: {
+        username,
+      },
+    })
 
-      const user = await prisma.user.create({
-        data: {
-          username,
-          password: hashedPassword,
-        },
-      })
-
-      return reply.send(user)
-    } catch (error) {
-      // Tratamento de erros
-      console.error(error)
-      return reply.status(500).send({ error: 'Erro ao criar o usuário' })
+    if (userExists) {
+      throw new AppError('Username already taken', 400)
     }
+
+    const hashedPassword = await hash(password, 10)
+    const user = await prisma.user.create({
+      data: {
+        username,
+        password: hashedPassword,
+      },
+    })
+
+    return reply.send(user)
   })
 }
