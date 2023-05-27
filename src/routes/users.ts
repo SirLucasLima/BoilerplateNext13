@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
+// import { AppError } from '../utils/AppError'
 
 export async function usersRoute(app: FastifyInstance) {
   app.post('/users', async (request) => {
@@ -10,6 +11,14 @@ export async function usersRoute(app: FastifyInstance) {
     })
 
     const { username, password } = registerBodySchema.parse(request.body)
+
+    // const checkUserExists = await prisma.user.findMany({
+    //   where: { username },
+    // })
+
+    // if (checkUserExists) {
+    //   throw new AppError('This username already in use')
+    // }
 
     const user = await prisma.user.create({
       data: {
