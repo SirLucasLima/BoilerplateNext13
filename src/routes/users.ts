@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
+import { hash } from 'bcryptjs'
 // import { AppError } from '../utils/AppError'
 
 export async function usersRoute(app: FastifyInstance) {
@@ -12,18 +13,12 @@ export async function usersRoute(app: FastifyInstance) {
 
     const { username, password } = registerBodySchema.parse(request.body)
 
-    // const checkUserExists = await prisma.user.findMany({
-    //   where: { username },
-    // })
-
-    // if (checkUserExists) {
-    //   throw new AppError('This username already in use')
-    // }
+    const hashedPassword = await hash(password, 8)
 
     const user = await prisma.user.create({
       data: {
         username,
-        password,
+        password: hashedPassword,
       },
     })
 
