@@ -31,20 +31,24 @@ export async function productsRoute(app: FastifyInstance) {
 
   // Create a new product
   app.post('/products', async (request, reply) => {
+    app.addHook('preHandler', async (request) => {
+      await request.jwtVerify()
+    })
+
     const createProductSchema = z.object({
-      userId: z.string(),
       name: z.string().min(3),
       description: z.string().min(15),
       price: z.number().positive(),
-      image: z.string().url(),
+      image: z.string(),
     })
 
-    const { userId, name, description, price, image } =
-      createProductSchema.parse(request.body)
+    const { name, description, price, image } = createProductSchema.parse(
+      request.body,
+    )
 
     const product = await prisma.product.create({
       data: {
-        userId,
+        userId: request.user.id,
         name,
         description,
         price,
