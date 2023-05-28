@@ -1,4 +1,4 @@
-import { FastifyInstance, name } from 'fastify'
+import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 // import { AppError } from '../utils/AppError'
@@ -6,7 +6,17 @@ import { prisma } from '../lib/prisma'
 export async function productsRoute(app: FastifyInstance) {
   // List all products
   app.get('/products', async (request, reply) => {
-    const products = await prisma.product.findMany()
+    const products = await prisma.product.findMany({
+      where: {
+        price: {
+          gt: 0,
+        },
+      },
+      orderBy: {
+        price: 'asc',
+      },
+    })
+
     return reply.send(products)
   })
 
@@ -38,7 +48,7 @@ export async function productsRoute(app: FastifyInstance) {
         name: z.string().min(3),
         description: z.string().min(15),
         price: z.string().transform(parseFloat),
-        image: z.string(),
+        image: z.coerce.boolean().default(false),
       })
 
       const { name, description, price, image } = createProductSchema.parse(
@@ -58,8 +68,6 @@ export async function productsRoute(app: FastifyInstance) {
       return response.send(product)
     } catch (error) {
       console.error('Validation error:', error)
-
-      return response.status(400).send({ error: error.message })
     }
   })
 
