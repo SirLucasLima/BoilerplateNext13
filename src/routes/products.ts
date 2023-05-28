@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify'
+import { FastifyInstance, name } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 // import { AppError } from '../utils/AppError'
@@ -30,33 +30,37 @@ export async function productsRoute(app: FastifyInstance) {
   })
 
   // Create a new product
-  app.post('/products', async (request) => {
-    // app.addHook('preHandler', async (request) => {
-    console.log(request.body)
-    // })
+  app.post('/products', async (request, response) => {
+    try {
+      console.log(request.body)
 
-    const createProductSchema = z.object({
-      userId: z.string(),
-      name: z.string().min(3),
-      description: z.string().min(15),
-      price: z.string().transform((str) => parseFloat(str)),
-      image: z.string(),
-    })
+      const createProductSchema = z.object({
+        name: z.string().min(3),
+        description: z.string().min(15),
+        price: z.string().transform(parseFloat),
+        image: z.string(),
+      })
 
-    const { userId, name, description, price, image } =
-      createProductSchema.parse(request.body)
+      const { name, description, price, image } = createProductSchema.parse(
+        request.body,
+      )
 
-    const product = await prisma.product.create({
-      data: {
-        userId,
-        name,
-        description,
-        price,
-        image,
-      },
-    })
+      const product = await prisma.product.create({
+        data: {
+          userId: 'ff98c4a5-55af-44cd-b9c2-09f23efd5ff3',
+          name,
+          description,
+          price,
+          image,
+        },
+      })
 
-    return product
+      return response.send(product)
+    } catch (error) {
+      console.error('Validation error:', error)
+
+      return response.status(400).send({ error: error.message })
+    }
   })
 
   // Update an existing product
