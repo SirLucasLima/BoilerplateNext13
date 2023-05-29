@@ -48,16 +48,17 @@ export async function productsRoute(app: FastifyInstance) {
         name: z.string().min(3),
         description: z.string().min(15),
         price: z.string().transform(parseFloat),
-        image: z.coerce.boolean().default(false),
+        image: z.string(),
       })
 
       const { name, description, price, image } = createProductSchema.parse(
         request.body,
       )
+      const userId = request.user.id
 
       const product = await prisma.product.create({
         data: {
-          userId: 'ff98c4a5-55af-44cd-b9c2-09f23efd5ff3',
+          userId,
           name,
           description,
           price,
