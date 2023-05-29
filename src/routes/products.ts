@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import jwt from 'jsonwebtoken'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 // import { AppError } from '../utils/AppError'
@@ -20,25 +21,6 @@ export async function productsRoute(app: FastifyInstance) {
     return reply.send(products)
   })
 
-  // Search by name
-  app.get('/products/search', async (request, reply) => {
-    const createProductSchema = z.object({
-      name: z.string().min(3),
-    })
-
-    const { name } = createProductSchema.parse(request.body)
-
-    const products = await prisma.product.findMany({
-      where: {
-        name: {
-          contains: name,
-        },
-      },
-    })
-
-    return reply.send(products)
-  })
-
   // Create a new product
   app.post('/products', async (request, response) => {
     try {
@@ -54,11 +36,10 @@ export async function productsRoute(app: FastifyInstance) {
       const { name, description, price, image } = createProductSchema.parse(
         request.body,
       )
-      const userId = request.user.id
 
       const product = await prisma.product.create({
         data: {
-          userId,
+          userId: request.user.id,
           name,
           description,
           price,
@@ -73,53 +54,72 @@ export async function productsRoute(app: FastifyInstance) {
   })
 
   // Update an existing product
-  app.put('/products/:id', async (request, reply) => {
-    const idSchema = z.object({
-      id: z.string(),
-    })
+  // app.put('/products/:id', async (request, reply) => {
+  //   const idSchema = z.object({
+  //     id: z.string(),
+  //   })
 
-    const { id } = idSchema.parse(request.params)
+  //   const { id } = idSchema.parse(request.params)
 
-    const updateProductSchema = z.object({
-      name: z.string().min(3).optional(),
-      description: z.string().min(5).optional(),
-      price: z.number().positive().optional(),
-      image: z.string().url().optional(),
-    })
+  //   const updateProductSchema = z.object({
+  //     name: z.string().min(3).optional(),
+  //     description: z.string().min(5).optional(),
+  //     price: z.number().positive().optional(),
+  //     image: z.string().url().optional(),
+  //   })
 
-    const { name, description, price, image } = updateProductSchema.parse(
-      request.body,
-    )
+  //   const { name, description, price, image } = updateProductSchema.parse(
+  //     request.body,
+  //   )
 
-    const updatedProduct = await prisma.product.update({
-      where: {
-        id: parseInt(id),
-      },
-      data: {
-        name,
-        description,
-        price,
-        image,
-      },
-    })
+  //   const updatedProduct = await prisma.product.update({
+  //     where: {
+  //       id: parseInt(id),
+  //     },
+  //     data: {
+  //       name,
+  //       description,
+  //       price,
+  //       image,
+  //     },
+  //   })
 
-    return reply.send(updatedProduct)
-  })
+  //   return reply.send(updatedProduct)
+  // })
+
+  // Search by name
+  // app.get('/products/search', async (request, reply) => {
+  //   const createProductSchema = z.object({
+  //     name: z.string().min(3),
+  //   })
+
+  //   const { name } = createProductSchema.parse(request.body)
+
+  //   const products = await prisma.product.findMany({
+  //     where: {
+  //       name: {
+  //         contains: name,
+  //       },
+  //     },
+  //   })
+
+  //   return reply.send(products)
+  // })
 
   // Delete product
-  app.delete('/products/:id', async (request, reply) => {
-    const idSchema = z.object({
-      id: z.string(),
-    })
+  // app.delete('/products/:id', async (request, reply) => {
+  //   const idSchema = z.object({
+  //     id: z.string(),
+  //   })
 
-    const { id } = idSchema.parse(request.params)
+  //   const { id } = idSchema.parse(request.params)
 
-    await prisma.product.delete({
-      where: {
-        id: parseInt(id),
-      },
-    })
+  //   await prisma.product.delete({
+  //     where: {
+  //       id: parseInt(id),
+  //     },
+  //   })
 
-    return reply.send({ message: 'Product deleted successfully' })
-  })
+  //   return reply.send({ message: 'Product deleted successfully' })
+  // })
 }

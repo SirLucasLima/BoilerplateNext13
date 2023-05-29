@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { AppError } from '../utils/AppError'
 import { compare } from 'bcryptjs'
-import { authConfig } from '../configs/auth'
 import { sign } from 'jsonwebtoken'
+import { authConfig } from '../configs/auth'
 
 export async function sessionsRoutes(app: FastifyInstance) {
   app.post('/sessions/signin', async (request, reply) => {
